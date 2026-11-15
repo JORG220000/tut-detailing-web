@@ -1,3 +1,4 @@
+import {icons} from './icons.js';
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 import {api} from './browser-api.js';
@@ -8,10 +9,10 @@ dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoun
 const menu=$('.menu');menu.onclick=()=>{const open=$('#links').classList.toggle('open');menu.setAttribute('aria-expanded',open);menu.setAttribute('aria-label',open?'Закрыть меню':'Открыть меню')};$('#links').onclick=()=>{if($('#links').classList.contains('open'))menu.click()};
 const gallery=[['hero','Кузов','Porsche 911 GT3 у бокса'],['cabin','Интерьер','Приборная панель Porsche'],['wash','Процесс','Очистка кузова пеной'],['exterior','Кузов','Фара Porsche 930'],['leather','Интерьер','Фактура кожаного сиденья'],['polish','Процесс','Обработка кузова в студии']];
 let subset=gallery;
-function light(i){const [f,,title]=subset[i];show('<img src="./media/'+f+'.webp" alt="'+title+'"><div class="row"><button class="outline" id="previous" aria-label="Предыдущее фото">←</button><span>'+title+' · '+(i+1)+' / '+subset.length+'</span><button class="outline" id="following" aria-label="Следующее фото">→</button></div>',true);$('#previous').onclick=()=>light((i+subset.length-1)%subset.length);$('#following').onclick=()=>light((i+1)%subset.length)}
+function light(i){const [f,,title]=subset[i];show('<img src="./media/'+f+'.webp" alt="'+title+'"><div class="row"><button class="outline" id="previous" aria-label="Предыдущее фото">'+icons.left+'</button><span>'+title+' · '+(i+1)+' / '+subset.length+'</span><button class="outline" id="following" aria-label="Следующее фото">'+icons.right+'</button></div>',true);$('#previous').onclick=()=>light((i+subset.length-1)%subset.length);$('#following').onclick=()=>light((i+1)%subset.length)}
 dialog.addEventListener('keydown',e=>{if(dialog.classList.contains('lightbox')){if(e.key==='ArrowLeft')$('#previous').click();if(e.key==='ArrowRight')$('#following').click()}});
 if($('#filters')){
- function filter(key){subset=gallery.filter(x=>key==='Все'||x[1]===key);$('#filters').innerHTML=['Все','Кузов','Интерьер','Процесс'].map(k=>'<button aria-pressed="'+(k===key)+'">'+k+'</button>').join('');$('#gallery-grid').innerHTML=subset.map(([f,,d],i)=>'<button data-photo="'+i+'" class="gallery-tile" aria-label="Увеличить: '+d+'"><img loading="lazy" src="./media/'+f+'.webp" alt="'+d+'"><span aria-hidden="true">↗</span></button>').join('')}
+ function filter(key){subset=gallery.filter(x=>key==='Все'||x[1]===key);$('#filters').innerHTML=['Все','Кузов','Интерьер','Процесс'].map(k=>'<button aria-pressed="'+(k===key)+'">'+k+'</button>').join('');$('#gallery-grid').innerHTML=subset.map(([f,,d],i)=>'<button data-photo="'+i+'" class="gallery-tile" aria-label="Увеличить: '+d+'"><img loading="lazy" src="./media/'+f+'.webp" alt="'+d+'"><span aria-hidden="true">'+icons.expand+'</span></button>').join('')}
  filter('Все');$('#filters').onclick=e=>{if(e.target.tagName==='BUTTON')filter(e.target.textContent)};$('#gallery-grid').onclick=e=>{const b=e.target.closest('[data-photo]');if(b)light(+b.dataset.photo)};
  let i=0;const files=[['night','Чёрный Porsche в ночном боксе'],['hero','Porsche 911 GT3 в профиль'],['exterior','Передняя часть Porsche 930']];
  function frame(n){i=(n+3)%3;$('#hero-photo').src='./media/'+files[i][0]+'.webp';$('#hero-photo').alt=files[i][1];$('#frame').textContent='0'+(i+1);$('.frames').style.setProperty('--progress',((i+1)/3*100)+'%')}
@@ -35,7 +36,7 @@ async function schedule(service='',ref=null){
  const generation=++token;show('<h2>Загружаем расписание…</h2>');
  try{const c=await api('catalog');if(generation!==token)return;
  if(!c.services.length||(service&&!c.services.some(s=>s.id===service))){show('<h2>Запись недоступна</h2><p>Услуга временно закрыта в деморасписании.</p>');return}
- show('<h2>'+(ref?'Перенос демозаписи':'Онлайн-запись')+'</h2>'+notice+'<form class="fields" id="choose"><label>Услуга<select name="service" '+(ref?'disabled':'')+'>'+c.services.map(s=>'<option value="'+s.id+'" '+(service===s.id?'selected':'')+'>'+s.name+' · '+s.duration+' мин</option>').join('')+'</select></label><label>Дата визита<input type="date" name="date" min="'+c.today+'" value="'+c.tomorrow+'" required></label><div><strong>Свободное время</strong><div class="slots" aria-live="polite"></div></div>'+errors+'<button class="primary" disabled>'+(ref?'Подтвердить перенос':'Продолжить →')+'</button></form>');
+ show('<h2>'+(ref?'Перенос демозаписи':'Онлайн-запись')+'</h2>'+notice+'<form class="fields" id="choose"><label>Услуга<select name="service" '+(ref?'disabled':'')+'>'+c.services.map(s=>'<option value="'+s.id+'" '+(service===s.id?'selected':'')+'>'+s.name+' · '+s.duration+' мин</option>').join('')+'</select></label><label>Дата визита<input type="date" name="date" min="'+c.today+'" value="'+c.tomorrow+'" required></label><div><strong>Свободное время</strong><div class="slots" aria-live="polite"></div></div>'+errors+'<button class="primary" disabled>'+(ref?'Подтвердить перенос':'Продолжить '+icons.right)+'</button></form>');
  const f=$('#choose'),day=f.elements.date,svc=f.elements.service,slotBox=$('.slots',f),submit=$('.primary',f);
  day.max=new Date(Date.parse(c.today)+90*86400000).toISOString().slice(0,10);
  let time='',serial=0;
